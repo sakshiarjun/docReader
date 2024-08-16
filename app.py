@@ -4,20 +4,25 @@
 #pip install unstructured unstructured[pdf]
 #pip install tiktoken
 #pip install faiss-cpu
+#pip install langchain-chroma
 
 import streamlit as st
-import pandas as pd
 import openai
 import os
-import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain.document_loaders import UnstructuredFileLoader
-#from langchain_community.document_loaders import OnlinePDFLoader use for remote pdfs
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.document_loaders import WebBaseLoader
+from langchain.embeddings.openai import OpenAIEmbeddings    
+from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-#from io import StringIO
+from langchain.chains import RetrievalQA
+from pypdf import PdfReader
+from langchain.docstore.document import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -25,23 +30,65 @@ openai.org_id = os.getenv('ORG_ID')
 st.title("docReader")
 
 client = OpenAI()
-def get_embedding(text, model='text-embedding-ada-002'):
-    response = client.embeddings.create(input=[text], model=model)
-    embeddings = response['data'][0]['embedding']
-    return embeddings
+def get_document_text(uploaded_files,file_names):
+    docs=[]
+    for uploaded_file, file_name in zip(uploaded_files,file_names):
+        if file_name.endswith('pdf'):
+            pdf_reader = PdfReader(uploaded_file)
+            doc_text = ""
+            for i, page in enumerate(pdf_reader.pages):
+                page = page.extract_text()
+                doc = Document(page_content = page, metadata={'page':(i+1)})
+                docs.append(doc)
+        elif file_name.endswith('txt'):
+            txt_reader = uploaded_file.read().decode()
+            doc = Document(page_content = txt_reader, metadata={'file_name':file_name})
+            docs.append(doc)
+    return docs
 
-        
-st.write("file uploaded from backend")
-loader = UnstructuredFileLoader("/home/sakshi/Desktop/docReader/Taj_Mahal.pdf")  #need filepath, cant get from st.file_uploader
-pages = loader.load_and_split()
-type(pages[0])
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-text_chunks = text_splitter.split_documents(pages)
-#st.write(text_chunks)
+def get_text_chunks(uploaded_files):
+    file_names = [file.name for file in uploaded_files]
+    docs = get_document_text(uploaded_files, file_names)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_chunks = text_splitter.split_documents(docs)
+    return text_chunks
 
-faiss_index = FAISS.from_documents(text_chunks, OpenAIEmbeddings(model='text-embedding-ada-002'))
-input_q = st.text_area("Enter question: ")
-answers = faiss_index.similarity_search(input_q,k=3)
-for i in answers:
-    st.write(i.page_content)
-    st.markdown("---")
+def generate_response(input_q, retriever):    
+    prompt_template = """You are a helpful bot who answers questions based on the content provided below. Answer to the point and in context to the content provided. If question is irrelevant to the content say that 'the question is not relevant to the content given' and don't try to make up an answer.
+    content is: {content}
+    question is: {input_q}
+    give your answer: """
+    prompt = ChatPromptTemplate.from_template(prompt_template)
+    llm = ChatOpenAI(model_name = "gpt-3.5-turbo")
+    rag_chain = ({"content": retriever | format_answer, "input_q": RunnablePassthrough()} | prompt | llm | StrOutputParser())
+    answer = rag_chain.invoke(input_q)
+    return answer
+
+def format_answer(results):
+    return "\n".join([result.page_content for result in results])
+
+uploaded_files = st.file_uploader("", accept_multiple_files=True) #size limited to 200MB
+st.write("or")
+url = st.text_input("Paste page URL")
+if uploaded_files:
+    text_chunks = get_text_chunks(uploaded_files)
+    db = FAISS.from_documents(text_chunks, OpenAIEmbeddings())
+    input_q = st.text_area("Question: ")
+    if input_q:
+        results = db.similarity_search(input_q,k=2)
+        retriever = db.as_retriever()
+        answer = generate_response(input_q, retriever)
+        st.write(answer)
+elif url:
+    loader = WebBaseLoader(url)
+    loader.requests_kwargs={'verify':False}
+    data = loader.load_and_split()
+    db = FAISS.from_documents(data, OpenAIEmbeddings())
+    input_q = st.text_area("Question: ")
+    if input_q:
+        results = db.similarity_search(input_q,k=2)
+        retriever = db.as_retriever()
+        answer = generate_response(input_q, retriever)
+        st.write(answer)
+else:
+    st.write(" ")
