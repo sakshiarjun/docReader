@@ -1,4 +1,4 @@
-📄 docReader
+#📄 docReader
 docReader is a Streamlit application that leverages Generative AI to answer questions based on the content of documents or URLs you provide. It utilizes vector embeddings for both the document and the query, performing a semantic search to deliver precise answers.
 
 ✨ Features
