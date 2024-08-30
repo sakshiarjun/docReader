@@ -53,10 +53,6 @@ To get started with **docReader**, follow these steps:
 - **PyPDF**: For reading PDF files.
 - **Unstructured**: For loading and splitting documents.
 
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
