@@ -81,12 +81,23 @@ if uploaded_files:
         st.write(answer)
 elif url:
     loader = WebBaseLoader(url)
-    loader.requests_kwargs={'verify':False}
-    data = loader.load_and_split()
-    db = FAISS.from_documents(data, OpenAIEmbeddings())
+
+    try:
+        data = loader.load_and_split()
+    except Exception as e:
+        st.error(f"Error loading data from URL: {e}")
+        st.stop()
+    if not data:
+        st.error("No data was retrieved from the provided URL.")
+        st.stop()
+    try:
+        db = FAISS.from_documents(data, OpenAIEmbeddings())
+    except Exception as e:
+        st.error(f"Error initializing FAISS index: {e}")
+        st.stop()
     input_q = st.text_area("Question: ")
     if input_q:
-        results = db.similarity_search(input_q,k=2)
+        results = db.similarity_search(input_q, k=2)
         retriever = db.as_retriever()
         answer = generate_response(input_q, retriever)
         st.write(answer)
