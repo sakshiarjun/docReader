@@ -12,7 +12,7 @@ import os
 from openai import OpenAI
 #from dotenv import load_dotenv
 from os import getenv
-from langchain.document_loaders import UnstructuredFileLoader
+#from langchain.document_loaders import UnstructuredFileLoader
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.embeddings.openai import OpenAIEmbeddings    
 from langchain.chat_models import ChatOpenAI
