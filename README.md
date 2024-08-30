@@ -56,3 +56,6 @@ To get started with **docReader**, follow these steps:
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## 📷 Images
+
