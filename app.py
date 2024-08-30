@@ -25,7 +25,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-load_dotenv()
 openai.api_key = getenv("OPENAI_API_KEY")
 openai.org_id = getenv('ORG_ID')
 st.title("docReader")
