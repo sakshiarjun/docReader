@@ -47,7 +47,3 @@ tiktoken==0.7.0
 tokenizers==0.19.1
 toml==0.10.2
 tomli==2.0.1
-urllib3==1.25.8
-watchfiles==0.22.0
-websocket-client==1.8.0
-websockets==12.0
