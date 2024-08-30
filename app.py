@@ -11,6 +11,7 @@ import openai
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from os import getenv
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.embeddings.openai import OpenAIEmbeddings    
@@ -25,8 +26,8 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.org_id = os.getenv('ORG_ID')
+openai.api_key = getenv("OPENAI_API_KEY")
+openai.org_id = getenv('ORG_ID')
 st.title("docReader")
 
 client = OpenAI()
