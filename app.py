@@ -10,7 +10,7 @@ import streamlit as st
 import openai
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from os import getenv
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain_community.document_loaders import WebBaseLoader
