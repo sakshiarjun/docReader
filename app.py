@@ -10,7 +10,7 @@ import streamlit as st
 import openai
 import os
 from openai import OpenAI
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 from os import getenv
 #from langchain.document_loaders import UnstructuredFileLoader
 from langchain_community.document_loaders import WebBaseLoader
@@ -25,8 +25,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-openai.api_key = getenv("OPENAI_API_KEY")
-openai.org_id = getenv('ORG_ID')
+load_dotenv()
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+openai.org_id = os.environ.get('ORG_ID')
 st.title("docReader")
 
 client = OpenAI()
